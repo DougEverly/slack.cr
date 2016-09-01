@@ -22,7 +22,13 @@ require "slack"
 ```
 
 
-TODO: Write usage instructions here
+## Todo
+
+* Self registering events
+* Stabilize API
+* Properly reconnect
+* Streamline callbacks
+* Reconcile with https://github.com/manastech/crystal_slack Event API
 
 ## Development
 
@@ -76,7 +82,7 @@ slack.start
 
 ## Contributing
 
-1. Fork it ( https://github.com/[your-github-name]/slack/fork )
+1. Fork it ( https://github.com/DougEverly/slack/fork )
 2. Create your feature branch (git checkout -b my-new-feature)
 3. Commit your changes (git commit -am 'Add some feature')
 4. Push to the branch (git push origin my-new-feature)
@@ -84,4 +90,4 @@ slack.start
 
 ## Contributors
 
-- [[your-github-name]](https://github.com/[your-github-name]) Doug Everly - creator, maintainer
+- [DougEverly](https://github.com/DougEverly) - creator, maintainer
