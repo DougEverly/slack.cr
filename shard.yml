@@ -1,0 +1,7 @@
+name: slack
+version: 0.1.0
+
+authors:
+  - Doug Everly <Doug@Everly.org>
+
+license: MIT
