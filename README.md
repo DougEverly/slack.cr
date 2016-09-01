@@ -31,7 +31,7 @@ require "../src/slack.cr"
 slack = Slack.new(token: ENV["SLACK_TOKEN"])
 
 slack.add_callback(Slack::Event::Message, Proc(Slack, Slack::Event, Nil).new do |session, event|
-  if event = event.as?(Slack::Event::Message) # weird casting here.. can i put it in slack?
+  if event = event.as?(Slack::Event::Message)
     if session.me.as?(User)
       puts "Here as User! #{event.class.to_s} #{event.test}"
       if event.mentions(session.me)
