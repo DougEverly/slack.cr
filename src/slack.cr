@@ -25,23 +25,33 @@ module MemberConverter
   end
 end
 
-class Users
-  # @users = Hash(String, User)
-  def initialize
-    @users = Hash(String, Slack::User).new
-  end
+class Slack
+  class Users
+    def initialize
+      @users_by_id = Hash(String, Slack::User).new
+      @users_by_name = Hash(String, Slack::User).new
+    end
 
-  # def initialize(io : JSON::PullParser)
-  #   @users = Hash(String, User).new
-  # end
+    def <<(user : Slack::User)
+      @users_by_id[user.id] = user
+      @users_by_name["@" + user.name] = user
+    end
 
-  def <<(user : Slack::User)
-    @users[user.id] = user
-    @users["@" + user.name] = user
-  end
+    def [](key)
+      @users_by_id[key]
+    end
 
-  def [](key)
-    @users[key]
+    def by_id
+      @users_by_id
+    end
+
+    def by_name
+      @users_by_name
+    end
+		
+		def to_s(io : IO)
+			io << @users_by_id.values.map{|u| u.to_s}.join(",")
+		end
   end
 end
 
@@ -77,17 +87,20 @@ class Slack
   property wss : String | Nil
   property config
   property me : User?
-  property users : Hash(String, Slack::User)
+  property users : Slack::Users
   property prefs : JSON::Any?
   property channels : Hash(String, Slack::Channel)
   property s : HTTP::WebSocket?
+
+  property debug = true
 
   # @config : JSON::Any
 
   @me : User?
   @mid : Int32
   @self : JSON::Any?
-  @users : Users
+
+  # @users : Slack::Users
 
   # @callbacks :  Hash(Slack::Event.class, Proc(Slack, Slack::Event, Nil))
 
@@ -100,7 +113,7 @@ class Slack
 
   def initialize(@token : String)
     @mid = 0
-    @users = Users.new
+    @users = Slack::Users.new
     @channels = Hash(String, Slack::Channel).new
     @endpoint = "slack.com"
     # @callbacks = Hash(Slack::Event.class,  ((Slack, Slack::Event)->)).new {|h,k| h[k] = ->(session : Slack, event : Slack::Event) {} }
@@ -177,7 +190,7 @@ class Slack
           puts "Connection closed: #{m}"
         end
 
-        ready_event = Slack::Event.get_event("ready")
+        # ready_event = Slack::Event.get_event("ready")
 
         # puts " .... "
         # @callbacks[Slack::Event::Ready]?.try do |cbs|
@@ -187,25 +200,29 @@ class Slack
         # end
 
         s.on_message do |j|
+          puts j if debug
           x = JSON.parse(j)
-          Slack::Event.get_event(x) do |event|
-            pp event.class
-            if event
-              puts event.class
-              if cbs = @callbacks[event.class]?
-                cbs.each do |cb|
-                  cb.call(self, event)
+          begin
+            event = Slack::Event.get_event(x)
+              pp event.class
+              if event
+                puts event.class
+                if cbs = @callbacks[event.class]?
+                  cbs.each do |cb|
+                    cb.call(self, event)
+                  end
                 end
+                case event
+                when Slack::Reconnect
+                  @wss = event.url
+                  s.close
+                else
+                end
+              elsif reply = Slack::ReplyTo.get_reply(j)
+                pp reply
               end
-              case event
-              when Slack::Reconnect
-                @wss = event.url
-                s.close
-              else
-              end
-            elsif reply = Slack::ReplyTo.get_reply(j)
-              pp reply
-            end
+          rescue ex
+            puts "Cannot process event: #{ex.message} for event type '#{x["type"]}'"
           end
         end
 

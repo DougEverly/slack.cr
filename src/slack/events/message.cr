@@ -6,7 +6,7 @@ class Slack
       property text : String
       property ts : String
       property channel : String
-      property subtype : String | Nil
+      property subtype : String?
 
       def initialize(@raw : JSON::Any)
         super
@@ -14,9 +14,9 @@ class Slack
         @channel = @raw["channel"].as_s
         @text = @raw["text"].as_s
         @ts = @raw["ts"].as_s
-        @subtype = if @raw["subtype"]?
-                     @raw["subtype"].as_s
-                   end
+        @raw["subtype"]?.try do |s|
+					@subtype =  s.as_s
+				end
       end
 
       def mentioned_users

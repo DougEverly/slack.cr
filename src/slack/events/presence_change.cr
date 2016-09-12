@@ -1,9 +1,11 @@
 class Slack
   class Event
     class PresenceChange < Event
-      def call
-        puts "Hey, I have an event!"
-      end
+      # JSON.mapping(
+      #   type: String,
+      #   presence: String,
+      #   user: String,
+      # )
     end
   end
 end
