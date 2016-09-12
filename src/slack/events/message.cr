@@ -1,6 +1,6 @@
 class Slack
   class Event
-    class Message < Event
+    class Message < Slack::Event
       property type : String
       property user : String
       property text : String
@@ -76,11 +76,7 @@ class Slack
       end
 
       def reply(text : String)
-        # if who = mentioned_users.shift?
-        #   text = "#{who}: #{text}"
-        # end
-
-        Response.new(channel, text)
+        Slack::Message.new(channel, text)
       end
     end
   end

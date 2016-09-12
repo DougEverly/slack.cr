@@ -24,32 +24,20 @@ class Slack
 
   class Event
     property type : String
-
-    property callback : Proc(Slack, Slack::Event, Nil)?
-
-    @@callback = nil # ->(session : Slack, event : Slack::Event) {  puts "here" }
-
-    def self.callback=(callback : Proc(Slack, Slack::Event, Nil)?)
-      puts "Setting callback..."
-      pp callback
-      @@callback = callback
-    end
-
-    def self.callback
-      @@callback
-    end
-
-    def callback
-      @callback ||= self.callback
-    end
+    @type = "unknown"
+    @raw = JSON::Any.new(nil)
 
     def initialize(@raw : JSON::Any)
-      @type = @raw["type"].as_s
-      # @callbacks = Hash(Class, (Slack, Slack::Event)->).new
-      # @callback = self.callback
-      # @callback = nil
-      # @callback = Proc(Slack, Slack::Event, Nil).new { |session, event| puts "got event" }
-      # @callback = self.callback
+      if type = @raw["type"]?
+        @type = type.as_s
+      else
+        @type = "unknown"
+      end
+    end
+
+    def initialize
+      @raw = JSON::Any.new
+      @type = "unknown"
     end
 
     def self.get_event(session : Slack, event : String)
@@ -80,6 +68,7 @@ class Slack
 
     def self.event_map
       event_map = {
+        "ready"                   => Event::Ready,
         "message"                 => Event::Message,
         "hello"                   => Event,
         "presence_change"         => Event::PresenceChange,
@@ -125,7 +114,7 @@ class Slack
         "presence_change"         => Event,
         "manual_presence_change"  => Event,
         "pref_change"             => Event,
-        "user_change"             => Event,
+        "user_change"             => Event::UserChange,
         "team_join"               => Event,
         "star_added"              => StarAdded,
         "star_removed"            => StarRemoved,
@@ -152,6 +141,12 @@ class Slack
         "subteam_self_added"      => Event,
         "subteam_self_removed"    => Event,
       }
+    end
+
+    def self.get_event(type : String)
+      event_map[type]?.try do |e|
+        e.new(JSON.parse("{\"type\":\"ready\"}"))
+      end
     end
 
     def self.get_event(event : JSON::Any)

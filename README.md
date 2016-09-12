@@ -1,6 +1,6 @@
 #  Slack Real Time API client written in Crystal
 
-Client to Slack's Real Time API written in Crystal and using WebSockets.
+Client to Slack's [Real Time API](https://api.slack.com/rtm) written in Crystal and using WebSockets.
 
 Still early in development.
 
