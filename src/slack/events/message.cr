@@ -15,8 +15,8 @@ class Slack
         @text = @raw["text"].as_s
         @ts = @raw["ts"].as_s
         @raw["subtype"]?.try do |s|
-					@subtype =  s.as_s
-				end
+          @subtype = s.as_s
+        end
       end
 
       def mentioned_users

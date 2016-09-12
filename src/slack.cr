@@ -48,10 +48,10 @@ class Slack
     def by_name
       @users_by_name
     end
-		
-		def to_s(io : IO)
-			io << @users_by_id.values.map{|u| u.to_s}.join(",")
-		end
+
+    def to_s(io : IO)
+      io << @users_by_id.values.map { |u| u.to_s }.join(",")
+    end
   end
 end
 
@@ -204,23 +204,23 @@ class Slack
           x = JSON.parse(j)
           begin
             event = Slack::Event.get_event(x)
-              pp event.class
-              if event
-                puts event.class
-                if cbs = @callbacks[event.class]?
-                  cbs.each do |cb|
-                    cb.call(self, event)
-                  end
+            pp event.class
+            if event
+              puts event.class
+              if cbs = @callbacks[event.class]?
+                cbs.each do |cb|
+                  cb.call(self, event)
                 end
-                case event
-                when Slack::Reconnect
-                  @wss = event.url
-                  s.close
-                else
-                end
-              elsif reply = Slack::ReplyTo.get_reply(j)
-                pp reply
               end
+              case event
+              when Slack::Reconnect
+                @wss = event.url
+                s.close
+              else
+              end
+            elsif reply = Slack::ReplyTo.get_reply(j)
+              pp reply
+            end
           rescue ex
             puts "Cannot process event: #{ex.message} for event type '#{x["type"]}'"
           end

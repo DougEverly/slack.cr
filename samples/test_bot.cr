@@ -24,12 +24,12 @@ end)
 
 slack.add_callback(Slack::Event::Message, Proc(Slack, Slack::Event, Nil).new do |session, event|
   if event = event.as?(Slack::Event::Message) # weird casting here.. can i put it in slack.cr?
-		if event.mentions("users")
-			pp session.users.by_id.values.join(",")
-			puts session.users.to_s
-	    x = event.reply(text: session.users.to_s)
-	    session.send x
-		end
+    if event.mentions("users")
+      pp session.users.by_id.values.join(",")
+      puts session.users.to_s
+      x = event.reply(text: session.users.to_s)
+      session.send x
+    end
     x = event.reply(text: "callback 2")
     session.send x
   end
@@ -52,10 +52,9 @@ slack.on_user_change do |session, event|
   if user = session.users.by_id[e.user]?
     puts "Here is my user"
     pp user
-	  user.profile = e.get_profile
-		pp user
+    user.profile = e.get_profile
+    pp user
   end
-	
 end
 
 slack.on_user_change do |session, event|

@@ -24,7 +24,7 @@ class Slack
         @team_id = "unknown"
         @real_name = "unknown"
         @deleted = false
-				puts "Initting..."
+        puts "Initting..."
         # @profile = Slack::User::Profile.new
         pp @raw["user"]?
         if u = @raw["user"]?
@@ -41,7 +41,7 @@ class Slack
       end
 
       def get_profile
-				@profile
+        @profile
       end
 
       def self.build(raw : JSON::Any) : Slack::Event::UserChange?

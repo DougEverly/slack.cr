@@ -9,10 +9,10 @@ class Slack
       tz:        String?,
       profile:   JSON::Any?,
     })
-		
-		def to_s(io)
-			io << @name
-		end
+
+    def to_s(io)
+      io << @name
+    end
   end
 end
 
