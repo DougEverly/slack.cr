@@ -9,7 +9,7 @@ end
 
 describe Slack::Event::Message do
   it "is a message" do
-  pp event
+    # pp event
     event.class.should eq(Slack::Event::Message)
   end
 
@@ -19,5 +19,4 @@ describe Slack::Event::Message do
     event.text.should eq("hi")
     event.channel.should eq("C1B6MMY7L")
   end
-
 end

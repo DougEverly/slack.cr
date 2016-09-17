@@ -39,6 +39,10 @@ slack.add_callback(Slack::Event::UserTyping, Proc(Slack, Slack::Event, Nil).new 
   puts "someone is typing"
 end)
 
+slack.add_callback(Slack::Event::Hello, Proc(Slack, Slack::Event, Nil).new do |session, event|
+  puts "all connected and ready to go!"
+end)
+
 slack.on_user_typing do |session, event|
   puts "Someone is typing"
 end
@@ -83,8 +87,8 @@ slack.add_callback(Slack::Event::Ready, Proc(Slack, Slack::Event, Nil).new do |s
 end
 )
 
-slack.add_callback(Slack::Reconnect, Proc(Slack, Slack::Event, Nil).new do |session, event|
-  puts "pin added"
+slack.add_callback(Slack::Event::ReconnectUrl, Proc(Slack, Slack::Event, Nil).new do |session, event|
+  puts "uh oh should reconnect!"
 end
 )
 

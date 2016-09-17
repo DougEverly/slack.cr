@@ -1,6 +1,7 @@
 class Slack
   class Event
     class Message < Slack::Event
+      @@type = "message"
       property type : String
       property user : String
       property text : String

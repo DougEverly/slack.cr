@@ -35,9 +35,8 @@ class Slack
       end
     end
 
-    def initialize
-      @raw = JSON::Any.new
-      @type = "unknown"
+    def self.type
+      @@type
     end
 
     def self.get_event(session : Slack, event : String)
@@ -66,6 +65,11 @@ class Slack
       end
     end
 
+    def self.register(type : String)
+      klass = self.class.to_s
+      puts "Redistering #{type} to #{klass}"
+    end
+
     def self.event_map
       event_map = {
         "ready"                   => Event::Ready,
@@ -85,6 +89,7 @@ class Slack
         "channel_history_changed" => Event,
         "dnd_updated"             => Event,
         "dnd_updated_user"        => Event,
+        "hello"                   => Event::Hello,
         "im_created"              => Event,
         "im_open"                 => Event,
         "im_close"                => Event,
@@ -111,14 +116,14 @@ class Slack
         "file_comment_deleted"    => Event,
         "pin_added"               => PinAdded,
         "pin_removed"             => Event,
-        "presence_change"         => Event,
+        "presence_change"         => Event::PresenceChange,
         "manual_presence_change"  => Event,
         "pref_change"             => Event,
         "user_change"             => Event::UserChange,
         "team_join"               => Event,
-        "star_added"              => StarAdded,
-        "star_removed"            => StarRemoved,
-        "reaction_added"          => Event,
+        "star_added"              => Event,
+        "star_removed"            => Event,
+        "reaction_added"          => Event::ReactionAdded,
         "reaction_removed"        => Event,
         "emoji_changed"           => Event,
         "commands_changed"        => Event,
@@ -134,7 +139,7 @@ class Slack
         "bot_changed"             => Event,
         "accounts_changed"        => Event,
         "team_migration_started"  => Event,
-        "reconnect_url"           => Event,
+        "reconnect_url"           => Event::ReconnectUrl,
         "Experimental"            => Event,
         "subteam_created"         => Event,
         "subteam_updated"         => Event,

@@ -60,8 +60,7 @@ describe Slack::Event::UserChange do
     event.deleted.should eq(false)
     event.real_name.should eq("Doug Everly")
     # event.profile.should be(JSON::Any)
-    pp event.profile
+    # pp event.profile
     # event.profile.class.should eq(JSON::Any)
   end
-
 end

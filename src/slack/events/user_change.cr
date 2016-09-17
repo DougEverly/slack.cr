@@ -8,15 +8,6 @@ class Slack
       property real_name : String
       @profile : JSON::Any?
 
-      # JSON.mapping(
-      #   user: String,
-      #   team_id: String,
-      #   name: String,
-      #   deleted: Bool,
-      #   real_name: String,
-      #   profile: JSON::Any?
-      # )
-
       def initialize(@raw : JSON::Any)
         super
         @name = "unknown"
@@ -24,18 +15,18 @@ class Slack
         @team_id = "unknown"
         @real_name = "unknown"
         @deleted = false
-        puts "Initting..."
+        # puts "Initting..."
         # @profile = Slack::User::Profile.new
-        pp @raw["user"]?
+        # pp @raw["user"]?
         if u = @raw["user"]?
-          puts "U:"
-          pp u
+          # puts "U:"
+          # pp u
           @user = u["id"].as_s
           @team_id = u["team_id"].as_s
           @real_name = u["real_name"].as_s
           @profile = u["profile"].dup
-          puts "profile"
-          pp @profile
+          # puts "profile"
+          # pp @profile
           @deleted = u["deleted"].as_bool
         end
       end

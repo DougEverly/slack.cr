@@ -25,36 +25,6 @@ module MemberConverter
   end
 end
 
-class Slack
-  class Users
-    def initialize
-      @users_by_id = Hash(String, Slack::User).new
-      @users_by_name = Hash(String, Slack::User).new
-    end
-
-    def <<(user : Slack::User)
-      @users_by_id[user.id] = user
-      @users_by_name["@" + user.name] = user
-    end
-
-    def [](key)
-      @users_by_id[key]
-    end
-
-    def by_id
-      @users_by_id
-    end
-
-    def by_name
-      @users_by_name
-    end
-
-    def to_s(io : IO)
-      io << @users_by_id.values.map { |u| u.to_s }.join(",")
-    end
-  end
-end
-
 struct Team
   # JSON.mapping({
   property id : String?
@@ -100,25 +70,24 @@ class Slack
   @mid : Int32
   @self : JSON::Any?
 
-  # @users : Slack::Users
-
-  # @callbacks :  Hash(Slack::Event.class, Proc(Slack, Slack::Event, Nil))
-
-  # def on(event_type, &cb)
-  #   add_callback(event_type.class, Proc(Slack, Slack::Event, Nil).new do |session, event|
-  #     puts "someone is typing"
-  #   end
-  #   )
-  # end
-
   def initialize(@token : String)
     @mid = 0
     @users = Slack::Users.new
     @channels = Hash(String, Slack::Channel).new
     @endpoint = "slack.com"
-    # @callbacks = Hash(Slack::Event.class,  ((Slack, Slack::Event)->)).new {|h,k| h[k] = ->(session : Slack, event : Slack::Event) {} }
     @callbacks = Hash(Slack::Event.class, Array(Proc(Slack, Slack::Event, Nil))).new { |h, k| h[k] = Array(Proc(Slack, Slack::Event, Nil)).new }
     load_config
+
+    # add_callback(Slack::Event::ReconnectUrl, Proc(Slack, Slack::Event, Nil).new do |session, event|
+    #   if e = event.as?(Slack::Event::ReconnectUrl)
+    #   puts e.url
+    #   @wss = e.url
+    #   if s = @s
+    #     s.close
+    #     end
+    #   end
+    # end
+    # )
   end
 
   def add_callback(t : Slack::Event.class, cb : Proc(Slack, Slack::Event, Nil))
@@ -163,9 +132,6 @@ class Slack
     end
   end
 
-  # def me
-  #   @config.me
-  # end
   def run
     @running = true
     while @running
@@ -182,51 +148,43 @@ class Slack
   end
 
   def connect
-    puts "Connecting..."
+    puts "Connecting..." if @debug
     if wss = @wss
-      @s = HTTP::WebSocket.new(wss)
-      @s.try do |s|
-        s.on_close do |m|
-          puts "Connection closed: #{m}"
-        end
+    @s = HTTP::WebSocket.new(wss)
+    @s.try do |s|
+      s.on_close do |m|
+        puts "Connection closed: #{m}"
+      end
 
-        # ready_event = Slack::Event.get_event("ready")
+      # ready_event = Slack::Event.get_event("ready")
 
-        # puts " .... "
-        # @callbacks[Slack::Event::Ready]?.try do |cbs|
-        #   cbs.each do |cb|
-        #   cb.call(self, ready_event)
-        #   end
-        # end
+      # puts " .... "
+      # @callbacks[Slack::Event::Ready]?.try do |cbs|
+      #   cbs.each do |cb|
+      #   cb.call(self, ready_event)
+      #   end
+      # end
 
-        s.on_message do |j|
-          puts j if debug
-          x = JSON.parse(j)
-          begin
-            event = Slack::Event.get_event(x)
-            pp event.class
-            if event
-              puts event.class
-              if cbs = @callbacks[event.class]?
-                cbs.each do |cb|
-                  cb.call(self, event)
-                end
+      s.on_message do |j|
+        puts "Got event: #{j}" if debug
+        x = JSON.parse(j)
+        begin
+          event = Slack::Event.get_event(x)
+          if event
+            if cbs = @callbacks[event.class]?
+              cbs.each do |cb|
+                cb.call(self, event)
               end
-              case event
-              when Slack::Reconnect
-                @wss = event.url
-                s.close
-              else
-              end
-            elsif reply = Slack::ReplyTo.get_reply(j)
-              pp reply
             end
-          rescue ex
-            puts "Cannot process event: #{ex.message} for event type '#{x["type"]}'"
+          elsif reply = Slack::ReplyTo.get_reply(j)
+            pp reply
           end
+        rescue ex
+          puts "Cannot process event: #{ex.message} for event type '#{x["type"]}'"
         end
+      end
 
-        s.run
+      s.run
       end
     end
   end
