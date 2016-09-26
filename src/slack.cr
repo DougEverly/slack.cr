@@ -90,9 +90,12 @@ class Slack
     # )
   end
 
+  def on(event : Slack::Event.class, &cb : Slack, Slack::Event ->)
+    @callbacks[event] << cb
+  end
+
   def add_callback(t : Slack::Event.class, cb : Proc(Slack, Slack::Event, Nil))
     @callbacks[t] << cb
-    pp @callbacks
   end
 
   def on_user_typing(&cb : Proc(Slack, Slack::Event, Nil))
@@ -150,41 +153,41 @@ class Slack
   def connect
     puts "Connecting..." if @debug
     if wss = @wss
-    @s = HTTP::WebSocket.new(wss)
-    @s.try do |s|
-      s.on_close do |m|
-        puts "Connection closed: #{m}"
-      end
-
-      # ready_event = Slack::Event.get_event("ready")
-
-      # puts " .... "
-      # @callbacks[Slack::Event::Ready]?.try do |cbs|
-      #   cbs.each do |cb|
-      #   cb.call(self, ready_event)
-      #   end
-      # end
-
-      s.on_message do |j|
-        puts "Got event: #{j}" if debug
-        x = JSON.parse(j)
-        begin
-          event = Slack::Event.get_event(x)
-          if event
-            if cbs = @callbacks[event.class]?
-              cbs.each do |cb|
-                cb.call(self, event)
-              end
-            end
-          elsif reply = Slack::ReplyTo.get_reply(j)
-            pp reply
-          end
-        rescue ex
-          puts "Cannot process event: #{ex.message} for event type '#{x["type"]}'"
+      @s = HTTP::WebSocket.new(wss)
+      @s.try do |s|
+        s.on_close do |m|
+          puts "Connection closed: #{m}"
         end
-      end
 
-      s.run
+        # ready_event = Slack::Event.get_event("ready")
+
+        # puts " .... "
+        # @callbacks[Slack::Event::Ready]?.try do |cbs|
+        #   cbs.each do |cb|
+        #   cb.call(self, ready_event)
+        #   end
+        # end
+
+        s.on_message do |j|
+          puts "Got event: #{j}" if debug
+          x = JSON.parse(j)
+          begin
+            event = Slack::Event.get_event(x)
+            if event
+              if cbs = @callbacks[event.class]?
+                cbs.each do |cb|
+                  cb.call(self, event)
+                end
+              end
+            elsif reply = Slack::ReplyTo.get_reply(j)
+              pp reply
+            end
+          rescue ex
+            puts "Cannot process event: #{ex.message} for event type '#{x["type"]}'"
+          end
+        end
+
+        s.run
       end
     end
   end

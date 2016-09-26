@@ -1,7 +1,7 @@
 require "../src/slack.cr"
 slack = Slack.new(token: ENV["SLACK_TOKEN"])
 
-slack.add_callback(Slack::Event::Message, Proc(Slack, Slack::Event, Nil).new do |session, event|
+slack.on(Slack::Event::Message) do |session, event|
   if event = event.as?(Slack::Event::Message) # weird casting here.. can i put it in slack.cr?
     if session.me.as?(Slack::User)
       puts "Here as User! #{event.class.to_s} #{event.test}"
@@ -20,9 +20,9 @@ slack.add_callback(Slack::Event::Message, Proc(Slack, Slack::Event, Nil).new do 
       end
     end
   end
-end)
+end
 
-slack.add_callback(Slack::Event::Message, Proc(Slack, Slack::Event, Nil).new do |session, event|
+slack.on(Slack::Event::Message) do |session, event|
   if event = event.as?(Slack::Event::Message) # weird casting here.. can i put it in slack.cr?
     if event.mentions("users")
       pp session.users.by_id.values.join(",")
@@ -33,15 +33,20 @@ slack.add_callback(Slack::Event::Message, Proc(Slack, Slack::Event, Nil).new do 
     x = event.reply(text: "callback 2")
     session.send x
   end
-end)
+end
 
-slack.add_callback(Slack::Event::UserTyping, Proc(Slack, Slack::Event, Nil).new do |session, event|
-  puts "someone is typing"
-end)
+slack.on(Slack::Event::UserTyping) do |session, event|
+  pp event
+  puts "someone is typing cb"
+end
 
-slack.add_callback(Slack::Event::Hello, Proc(Slack, Slack::Event, Nil).new do |session, event|
+slack.on(Slack::Event::Hello) do |session, event|
+  puts "all connected and ready to go!2"
+end
+
+slack.on(Slack::Event::Hello) do |session, event|
   puts "all connected and ready to go!"
-end)
+end
 
 slack.on_user_typing do |session, event|
   puts "Someone is typing"
