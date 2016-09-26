@@ -38,7 +38,7 @@ require "slack"
 require "../src/slack.cr"
 slack = Slack.new(token: ENV["SLACK_TOKEN"])
 
-slack.add_callback(Slack::Event::Message, Proc(Slack, Slack::Event, Nil).new do |session, event|
+slack.on(Slack::Event::Message) do |session, event|
   if event = event.as?(Slack::Event::Message)
     if session.me.as?(User)
       puts "Here as User! #{event.class.to_s} #{event.test}"
@@ -57,26 +57,23 @@ slack.add_callback(Slack::Event::Message, Proc(Slack, Slack::Event, Nil).new do 
       end
     end
   end
-end)
+end
 
-slack.add_callback(Slack::Event::UserTyping, Proc(Slack, Slack::Event, Nil).new do |session, event|
+slack.on(Slack::Event::UserTyping) do |session, event|
   puts "someone is typing"
 end
-)
 
-slack.add_callback(Slack::Event::StarAdded, Proc(Slack, Slack::Event, Nil).new do |session, event|
+slack.on(Slack::Event::StarAdded) do |session, event|
   puts "starred"
 end
-)
-slack.add_callback(Slack::Event::PinAdded, Proc(Slack, Slack::Event, Nil).new do |session, event|
-  puts "pin added"
-end
-)
 
-slack.add_callback(Slack::Reconnect, Proc(Slack, Slack::Event, Nil).new do |session, event|
+slack.on(Slack::Event::PinAdded) do |session, event|
   puts "pin added"
 end
-)
+
+slack.on(Slack::Reconnect) do |session, event|
+  puts "pin added"
+end
 
 slack.start
 
