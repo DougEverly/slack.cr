@@ -70,16 +70,15 @@ slack.on_user_change do |session, event|
   puts "User changed"
 end
 
-slack.add_callback(Slack::Event::StarAdded, Proc(Slack, Slack::Event, Nil).new do |session, event|
+slack.on(Slack::Event::StarAdded) do |session, event|
   puts "starred"
 end
-)
-slack.add_callback(Slack::Event::PinAdded, Proc(Slack, Slack::Event, Nil).new do |session, event|
+
+slack.on(Slack::Event::PinAdded) do |session, event|
   puts "pin added"
 end
-)
 
-slack.add_callback(Slack::Event::Ready, Proc(Slack, Slack::Event, Nil).new do |session, event|
+slack.on(Slack::Event::Hello) do |session, event|
   hello = %[{
   "id": #{@mid += 1}
   "type": "message",
@@ -90,11 +89,9 @@ slack.add_callback(Slack::Event::Ready, Proc(Slack, Slack::Event, Nil).new do |s
   r = Slack::Message.new(channel: "C1B6MMY7L", text: message).to_json
   slack.send r
 end
-)
 
-slack.add_callback(Slack::Event::ReconnectUrl, Proc(Slack, Slack::Event, Nil).new do |session, event|
+slack.on(Slack::Event::ReconnectUrl) do |session, event|
   puts "uh oh should reconnect!"
 end
-)
 
 slack.run

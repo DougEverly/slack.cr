@@ -10,6 +10,12 @@ class Slack
       profile:   JSON::Any?,
     })
 
+    def initialize(json : JSON::Any)
+      @id = json["id"]
+      @name = json["name"]
+      @profile = json["profile"]
+    end
+
     def to_s(io)
       io << @name
     end

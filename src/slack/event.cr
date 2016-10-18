@@ -74,10 +74,9 @@ class Slack
       event_map = {
         "ready"                   => Event::Ready,
         "message"                 => Event::Message,
-        "hello"                   => Event,
         "presence_change"         => Event::PresenceChange,
         "user_typing"             => Event::UserTyping,
-        "reconnect_url"           => Event,
+        "reconnect_url"           => Event::ReconnectUrl,
         "channel_marked"          => Event,
         "channel_created"         => Event,
         "channel_joined"          => Event,
@@ -114,7 +113,7 @@ class Slack
         "file_comment_added"      => Event,
         "file_comment_edited"     => Event,
         "file_comment_deleted"    => Event,
-        "pin_added"               => PinAdded,
+        "pin_added"               => Event::PinAdded,
         "pin_removed"             => Event,
         "presence_change"         => Event::PresenceChange,
         "manual_presence_change"  => Event,
@@ -157,6 +156,7 @@ class Slack
     def self.get_event(event : JSON::Any)
       event["type"]?.try do |type|
         event_map[type.as_s]?.try do |e|
+          puts "Event is #{event}"
           e.new(event)
         end
       end

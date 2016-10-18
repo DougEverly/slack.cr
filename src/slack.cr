@@ -78,16 +78,6 @@ class Slack
     @callbacks = Hash(Slack::Event.class, Array(Proc(Slack, Slack::Event, Nil))).new { |h, k| h[k] = Array(Proc(Slack, Slack::Event, Nil)).new }
     load_config
 
-    # add_callback(Slack::Event::ReconnectUrl, Proc(Slack, Slack::Event, Nil).new do |session, event|
-    #   if e = event.as?(Slack::Event::ReconnectUrl)
-    #   puts e.url
-    #   @wss = e.url
-    #   if s = @s
-    #     s.close
-    #     end
-    #   end
-    # end
-    # )
   end
 
   def on(event : Slack::Event.class, &cb : Slack, Slack::Event ->)
@@ -137,9 +127,22 @@ class Slack
 
   def run
     @running = true
+
+    on(Slack::Event::ReconnectUrl) do |session, event|
+      if e = event.as?(Slack::Event::ReconnectUrl)
+        if url = e.url
+          puts "Setting url to #{url}"
+          session.wss = url
+          session.close
+        end
+      end
+    end
+
     while @running
+      puts "Connecting..."
       connect
     end
+    puts "Disconnected"
   end
 
   def run(&block : Slack ->)
@@ -150,45 +153,47 @@ class Slack
     end
   end
 
+  def close
+    # if @running && (s = @s)
+    #     s.close
+    # end
+  end
+
   def connect
-    puts "Connecting..." if @debug
-    if wss = @wss
-      @s = HTTP::WebSocket.new(wss)
-      @s.try do |s|
-        s.on_close do |m|
-          puts "Connection closed: #{m}"
-        end
-
-        # ready_event = Slack::Event.get_event("ready")
-
-        # puts " .... "
-        # @callbacks[Slack::Event::Ready]?.try do |cbs|
-        #   cbs.each do |cb|
-        #   cb.call(self, ready_event)
-        #   end
-        # end
-
-        s.on_message do |j|
-          puts "Got event: #{j}" if debug
-          x = JSON.parse(j)
-          begin
-            event = Slack::Event.get_event(x)
-            if event
-              if cbs = @callbacks[event.class]?
-                cbs.each do |cb|
-                  cb.call(self, event)
-                end
-              end
-            elsif reply = Slack::ReplyTo.get_reply(j)
-              pp reply
-            end
-          rescue ex
-            puts "Cannot process event: #{ex.message} for event type '#{x["type"]}'"
+    begin
+      puts "Connecting..." if @debug
+      if wss = @wss
+        @s = HTTP::WebSocket.new(wss)
+        @s.try do |s|
+          s.on_close do |m|
+            puts "Connection closed: #{m}"
           end
-        end
 
-        s.run
+          s.on_message do |j|
+            puts "Got event: #{j}" if debug
+            x = JSON.parse(j)
+            begin
+              event = Slack::Event.get_event(x)
+              if event
+                if cbs = @callbacks[event.class]?
+                  cbs.each do |cb|
+                    cb.call(self, event)
+                  end
+                end
+              elsif reply = Slack::ReplyTo.get_reply(j)
+                pp reply
+              end
+            rescue ex
+              puts "Cannot process event: #{ex.message} for event type '#{x["type"]}'"
+            end
+          end
+
+          s.run
+          puts "disconnected after run"
+        end
       end
+    rescue ex
+      puts ex.message
     end
   end
 end
