@@ -48,11 +48,13 @@ slack.on(Slack::Event::Hello) do |session, event|
   puts "all connected and ready to go!"
 end
 
-slack.on_user_typing do |session, event|
+slack.on(Slack::Event::UserTyping) do |context, event|
+  pp event
   puts "Someone is typing"
 end
 
-slack.on_user_change do |session, event|
+
+slack.on(Slack::Event::UserChange) do |session, event|
   pp event
   e = event.as(Slack::Event::UserChange)
   puts "Here is my event"
