@@ -1,10 +1,17 @@
 require "../src/slack.cr"
+
+# create slack session
 slack = Slack.new(token: ENV["SLACK_TOKEN"])
 
 slack.on(Slack::Event::Message) do |session, event|
   if event = event.as?(Slack::Event::Message) # weird casting here.. can i put it in slack.cr?
+    puts "Got a message"
+    pp event
+    if event.from(session.me)
+      puts "This message is from me, dont reply to me"
+      next
+    end
     if session.me.as?(Slack::User)
-      puts "Here as User! #{event.class.to_s} #{event.test}"
       if event.mentions(session.me)
         x = event.reply(text: "oh hi there")
         session.send x
@@ -22,54 +29,31 @@ slack.on(Slack::Event::Message) do |session, event|
   end
 end
 
-slack.on(Slack::Event::Message) do |session, event|
-  if event = event.as?(Slack::Event::Message) # weird casting here.. can i put it in slack.cr?
-    if event.mentions("users")
-      pp session.users.by_id.values.join(",")
-      puts session.users.to_s
-      x = event.reply(text: session.users.to_s)
-      session.send x
-    end
-    x = event.reply(text: "callback 2")
-    session.send x
-  end
-end
-
 slack.on(Slack::Event::UserTyping) do |session, event|
   pp event
-  puts "someone is typing cb"
+  puts "someone is typing 1"
 end
 
-slack.on(Slack::Event::Hello) do |session, event|
-  puts "all connected and ready to go!2"
-end
-
-slack.on(Slack::Event::Hello) do |session, event|
-  puts "all connected and ready to go!"
+# stack another action on Slack::Event::UserTyping
+slack.on(Slack::Event::UserTyping) do |session, event|
+  puts "someone is typing 2"
 end
 
 slack.on(Slack::Event::UserTyping) do |context, event|
-  pp event
   puts "Someone is typing"
 end
-
 
 slack.on(Slack::Event::UserChange) do |session, event|
   pp event
   e = event.as(Slack::Event::UserChange)
   puts "Here is my event"
   pp e.get_profile
-  # profile = Slack::User::Profile.from_json(e.profile)
   if user = session.users.by_id[e.user]?
     puts "Here is my user"
     pp user
     user.profile = e.get_profile
     pp user
   end
-end
-
-slack.on_user_change do |session, event|
-  puts "User changed"
 end
 
 slack.on(Slack::Event::StarAdded) do |session, event|
@@ -80,6 +64,7 @@ slack.on(Slack::Event::PinAdded) do |session, event|
   puts "pin added"
 end
 
+# send welcome Message
 slack.on(Slack::Event::Hello) do |session, event|
   hello = %[{
   "id": #{@mid += 1}
@@ -88,7 +73,7 @@ slack.on(Slack::Event::Hello) do |session, event|
   "text" : "hello"
   }]
   message = "Hello #{Time.now.to_s}"
-  r = Slack::Message.new(channel: "C1B6MMY7L", text: message).to_json
+  r = Slack::Message.new(channel: "C1B6MMY7L", text: message)
   slack.send r
 end
 
@@ -96,4 +81,13 @@ slack.on(Slack::Event::ReconnectUrl) do |session, event|
   puts "uh oh should reconnect!"
 end
 
-slack.run
+spawn {
+  slack.run
+}
+
+spawn {
+  sleep(1)
+  slack.send("Hello from sleeper", to: "general")
+}
+
+sleep

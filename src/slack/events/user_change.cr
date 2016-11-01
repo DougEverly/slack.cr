@@ -1,5 +1,8 @@
+Slack::Event.register(Slack::Event::UserChange, "user_change")
+
 class Slack
   class Event
+    # Implments https://api.slack.com/events/user_change
     class UserChange < Slack::Event
       property user : String
       property team_id : String

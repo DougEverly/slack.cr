@@ -1,5 +1,8 @@
+Slack::Event.register(Slack::Event::Message, "message")
+
 class Slack
   class Event
+    # Implements https://api.slack.com/events/message
     class Message < Slack::Event
       @@type = "message"
       property type : String
@@ -25,10 +28,6 @@ class Slack
           return [m.string]
         end
         return Array(String).new
-      end
-
-      def test
-        "TEST"
       end
 
       def mentions(s : String)
@@ -59,8 +58,14 @@ class Slack
         text =~ /<@#{person.id}>/ if person
       end
 
+      def from(person : User?)
+        if person
+          user == person.id
+        end
+      end
+
       def mentions(*users : User)
-        mentons(users.to_a)
+        mentions(users.to_a)
       end
 
       def mentions(users : Array(User))

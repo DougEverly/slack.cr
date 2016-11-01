@@ -1,5 +1,8 @@
+Slack::Event.register(Slack::Event::PresenceChange, "presence_change")
+
 class Slack
   class Event
+    # Implements https://api.slack.com/events/presence_change
     class PresenceChange < Slack::Event
       @@type = "presence_change"
       getter presence : String

@@ -1,5 +1,8 @@
+Slack::Event.register(Slack::Event::ReconnectUrl, "reconnect_url")
+
 class Slack
   class Event
+    # Implements https://api.slack.com/events/reconnect_url
     class ReconnectUrl < Event
       property url : String
 

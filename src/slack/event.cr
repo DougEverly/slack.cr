@@ -24,6 +24,7 @@ class Slack
 
   class Event
     property type : String
+    property raw : JSON::Any
     @type = "unknown"
     @raw = JSON::Any.new(nil)
 
@@ -68,6 +69,33 @@ class Slack
     def self.register(type : String)
       klass = self.class.to_s
       puts "Redistering #{type} to #{klass}"
+    end
+
+    EVENTS = [
+      Event,
+      # Event::Hello,
+      Event::Message,
+      Event::PinAdded,
+      Event::PresenceChange,
+      Event::ReactionAdded,
+      Event::Ready,
+      Event::ReconnectUrl,
+      Event::UserChange,
+      Event::UserTyping,
+    ]
+
+    EVENT_MAP = Hash(String, Slack::Event.class).new
+
+    def self.register(event : Slack::Event.class)
+      Slack::Event::EVENTS << Slack::Event::Hello
+    end
+
+    def self.register(event : Slack::Event.class, *types : String)
+      Slack::Event::EVENTS << Slack::Event::Hello
+      types.each do |type|
+        EVENT_MAP[type] = event
+      end
+      pp EVENT_MAP
     end
 
     def self.event_map
@@ -145,6 +173,7 @@ class Slack
         "subteam_self_added"      => Event,
         "subteam_self_removed"    => Event,
       }
+      EVENT_MAP
     end
 
     def self.get_event(type : String)

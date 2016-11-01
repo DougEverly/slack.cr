@@ -1,7 +1,10 @@
+Slack::Event.register(Slack::Event::ReactionAdded, "reaction_added")
+
 class Slack
   class Event
+    # Implements https://api.slack.com/events/reaction_added
     class ReactionAdded < Slack::Event
-      @@type = "presence_change"
+      @@type = "reaction_added"
       getter item : JSON::Any
       getter user : String
       getter reaction : String

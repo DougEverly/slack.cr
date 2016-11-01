@@ -3,64 +3,30 @@ require "http/web_socket"
 require "json"
 require "./slack/**"
 
-class Slack
-  class Hello
-    JSON.mapping({
-      ok:       Bool,
-      me:       {type: User, key: "self"},
-      users:    Array(User),
-      url:      String,
-      channels: Array(Slack::Channel),
-    })
-  end
-end
-
-module MemberConverter
-  def self.from_json(value : JSON::PullParser)
-    # value.read_array
-    t = Array(String).new
-    value.read_array do
-      t << v.read_string
-    end
-  end
-end
-
-struct Team
-  # JSON.mapping({
-  property id : String?
-  property name : String?
-  property domain : String?
-  # })
-end
-
-class Slack
-  class Channel
-    JSON.mapping({
-      id:      String,
-      name:    String,
-      topic:   {type: Topic, nilable: true},
-      purpose: {type: Topic, nilable: true},
-      members: {type: Array(String), nilable: true},
-    })
-
-    struct Topic
-      JSON.mapping({
-        value:    String,
-        creator:  String,
-        last_set: Int32,
-      })
-    end
-  end
-end
-
+# Handles connecting and starting Slack websocket session and delegates slack events.
+# ```
+# require "../src/slack.cr"
+# slack = Slack.new(token: ENV["SLACK_TOKEN"])
+#
+# slack.on(Slack::Event::UserTyping) do |session, event|
+#   puts "someone is typing 2"
+# end
+#
+# slack.run
+# ```
 class Slack
   property wss : String | Nil
   property config
+  # Returns me, as the current slack user.
   property me : User?
+  # List of users in current Slack.
   property users : Slack::Users
+  # Preferences
   property prefs : JSON::Any?
+  # Channels in current Slack session.
   property channels : Hash(String, Slack::Channel)
-  property s : HTTP::WebSocket?
+  # Websocket connection.
+  property socket : HTTP::WebSocket?
 
   property debug = true
 
@@ -76,27 +42,17 @@ class Slack
     @channels = Hash(String, Slack::Channel).new
     @endpoint = "slack.com"
     @callbacks = Hash(Slack::Event.class, Array(Proc(Slack, Slack::Event, Nil))).new { |h, k| h[k] = Array(Proc(Slack, Slack::Event, Nil)).new }
-    load_config
-
+    start
   end
 
+  # Binds a callback to event.
+  # Allows multiple bindings to event, and will be called in order of binding
   def on(event : Slack::Event.class, &cb : Slack, Slack::Event ->)
     @callbacks[event] << cb
   end
 
-  def add_callback(t : Slack::Event.class, cb : Proc(Slack, Slack::Event, Nil))
-    @callbacks[t] << cb
-  end
-
-  def on_user_typing(&cb : Proc(Slack, Slack::Event, Nil))
-    @callbacks[Slack::Event::UserTyping] << cb
-  end
-
-  def on_user_change(&cb : Proc(Slack, Slack::Event, Nil))
-    @callbacks[Slack::Event::UserChange] << cb
-  end
-
-  def load_config
+  # Calls Slack rtm.start method to get initial websocket connection parameters
+  private def start
     client = HTTP::Client.new @endpoint, tls: true
     response = client.get("/api/rtm.start?token=#{@token}")
     response.status_code # => 200
@@ -119,15 +75,25 @@ class Slack
     client.close
   end
 
-  def send(msg : Object)
-    @s.try do |s|
-      s.send(msg.to_json)
+  # Send a message to slack
+  def send(msg : Slack::Message)
+    @socket.try do |socket|
+      socket.send(msg.to_json)
     end
   end
 
+  # Send a message to slack
+  def send(msg : String, to channel : String)
+    send(Slack::Message.new(channel, msg))
+  end
+
+  # Start Slack RTM event loop
   def run
     @running = true
 
+    # If a recconnect url is provided
+    # * Save new url
+    # * Close current connection
     on(Slack::Event::ReconnectUrl) do |session, event|
       if e = event.as?(Slack::Event::ReconnectUrl)
         if url = e.url
@@ -138,6 +104,7 @@ class Slack
       end
     end
 
+    # Connect loop
     while @running
       puts "Connecting..."
       connect
@@ -145,36 +112,29 @@ class Slack
     puts "Disconnected"
   end
 
-  def run(&block : Slack ->)
-    @running = true
-    connect
-    while @running
-      connect
-    end
-  end
-
+  # Close the websocket connection
   def close
-    # if @running && (s = @s)
-    #     s.close
-    # end
   end
 
-  def connect
+  # connect and run event loop
+  private def connect
     begin
       puts "Connecting..." if @debug
       if wss = @wss
-        @s = HTTP::WebSocket.new(wss)
-        @s.try do |s|
-          s.on_close do |m|
+        @socket = HTTP::WebSocket.new(wss)
+        @socket.try do |socket|
+          socket.on_close do |m|
             puts "Connection closed: #{m}"
           end
 
-          s.on_message do |j|
+          socket.on_message do |j|
             puts "Got event: #{j}" if debug
             x = JSON.parse(j)
+            pp x
             begin
               event = Slack::Event.get_event(x)
               if event
+                pp event
                 if cbs = @callbacks[event.class]?
                   cbs.each do |cb|
                     cb.call(self, event)
@@ -188,7 +148,7 @@ class Slack
             end
           end
 
-          s.run
+          socket.run
           puts "disconnected after run"
         end
       end
