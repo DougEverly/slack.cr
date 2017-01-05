@@ -82,7 +82,7 @@ class Slack
 
     def self.register(event : Slack::Event.class, *types : String)
       types.each do |type|
-        puts "Registering #{type} => #{event.name}"
+        # puts "Registering #{type} => #{event.name}"
         EVENT_MAP[type] = event
       end
     end
