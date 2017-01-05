@@ -5,10 +5,8 @@ slack = Slack.new(token: ENV["SLACK_TOKEN"])
 
 slack.on(Slack::Event::Message) do |session, event|
   if event = event.as?(Slack::Event::Message) # weird casting here.. can i put it in slack.cr?
-    puts "Got a message"
-    pp event
     if event.from(session.me)
-      puts "This message is from me, dont reply to me"
+      # This message is from me, dont reply to me
       next
     end
     if session.me.as?(Slack::User)
@@ -39,7 +37,7 @@ slack.on(Slack::Event::UserTyping) do |session, event|
   puts "someone is typing 2"
 end
 
-slack.on(Slack::Event::UserTyping) do |context, event|
+slack.on(Slack::Event::UserTyping) do |session, event|
   puts "Someone is typing"
 end
 
@@ -66,14 +64,8 @@ end
 
 # send welcome Message
 slack.on(Slack::Event::Hello) do |session, event|
-  hello = %[{
-  "id": #{@mid += 1}
-  "type": "message",
-  "channel": "C1B6MMY7L",
-  "text" : "hello"
-  }]
   message = "Hello #{Time.now.to_s}"
-  r = Slack::Message.new(channel: "C1B6MMY7L", text: message)
+  r = Slack::Message.new(channel: session.channels["#general"].id, text: message)
   slack.send r
 end
 

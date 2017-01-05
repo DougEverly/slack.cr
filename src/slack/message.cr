@@ -13,5 +13,10 @@ class Slack
         "text"    => @text,
       }.to_json(io)
     end
+
+    def get_event(event : JSON::Any)
+      new(event)
+    end
+
   end
 end

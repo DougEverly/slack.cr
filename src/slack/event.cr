@@ -3,7 +3,6 @@
 class Slack
   class ReplyTo
     def self.get_reply(event : JSON::Any)
-      pp event
       if event["reply_to"]?
         new(event)
       end
@@ -57,122 +56,38 @@ class Slack
     end
 
     def call(session : Slack, event : Slack::Event)
-      puts "Calling callback...."
-      pp @@callback
-      pp @callback
       @@callback.try do |cb|
-        puts "Callback is not nil!"
         cb.call(session, event)
       end
     end
 
     def self.register(type : String)
       klass = self.class.to_s
-      puts "Redistering #{type} to #{klass}"
     end
 
-    EVENTS = [
-      Event,
-      # Event::Hello,
-      Event::Message,
-      Event::PinAdded,
-      Event::PresenceChange,
-      Event::ReactionAdded,
-      Event::Ready,
-      Event::ReconnectUrl,
-      Event::UserChange,
-      Event::UserTyping,
-    ]
+    # EVENTS = [
+    #   Event,
+    #   # Event::Hello,
+    #   Event::Message,
+    #   Event::PinAdded,
+    #   Event::PresenceChange,
+    #   Event::ReactionAdded,
+    #   Event::Ready,
+    #   Event::ReconnectUrl,
+    #   Event::UserChange,
+    #   Event::UserTyping,
+    # ]
 
     EVENT_MAP = Hash(String, Slack::Event.class).new
 
-    def self.register(event : Slack::Event.class)
-      Slack::Event::EVENTS << Slack::Event::Hello
-    end
-
     def self.register(event : Slack::Event.class, *types : String)
-      Slack::Event::EVENTS << Slack::Event::Hello
       types.each do |type|
+        puts "Registering #{type} => #{event.name}"
         EVENT_MAP[type] = event
       end
-      pp EVENT_MAP
     end
 
     def self.event_map
-      event_map = {
-        "ready"                   => Event::Ready,
-        "message"                 => Event::Message,
-        "presence_change"         => Event::PresenceChange,
-        "user_typing"             => Event::UserTyping,
-        "reconnect_url"           => Event::ReconnectUrl,
-        "channel_marked"          => Event,
-        "channel_created"         => Event,
-        "channel_joined"          => Event,
-        "channel_left"            => Event,
-        "channel_deleted"         => Event,
-        "channel_rename"          => Event,
-        "channel_archive"         => Event,
-        "channel_unarchive"       => Event,
-        "channel_history_changed" => Event,
-        "dnd_updated"             => Event,
-        "dnd_updated_user"        => Event,
-        "hello"                   => Event::Hello,
-        "im_created"              => Event,
-        "im_open"                 => Event,
-        "im_close"                => Event,
-        "im_marked"               => Event,
-        "im_history_changed"      => Event,
-        "group_joined"            => Event,
-        "group_left"              => Event,
-        "group_open"              => Event,
-        "group_close"             => Event,
-        "group_archive"           => Event,
-        "group_unarchive"         => Event,
-        "group_rename"            => Event,
-        "group_marked"            => Event,
-        "group_history_changed"   => Event,
-        "file_created"            => Event,
-        "file_shared"             => Event,
-        "file_unshared"           => Event,
-        "file_public"             => Event,
-        "file_private"            => Event,
-        "file_change"             => Event,
-        "file_deleted"            => Event,
-        "file_comment_added"      => Event,
-        "file_comment_edited"     => Event,
-        "file_comment_deleted"    => Event,
-        "pin_added"               => Event::PinAdded,
-        "pin_removed"             => Event,
-        "presence_change"         => Event::PresenceChange,
-        "manual_presence_change"  => Event,
-        "pref_change"             => Event,
-        "user_change"             => Event::UserChange,
-        "team_join"               => Event,
-        "star_added"              => Event,
-        "star_removed"            => Event,
-        "reaction_added"          => Event::ReactionAdded,
-        "reaction_removed"        => Event,
-        "emoji_changed"           => Event,
-        "commands_changed"        => Event,
-        "team_plan_change"        => Event,
-        "team_pref_change"        => Event,
-        "team_rename"             => Event,
-        "team_domain_change"      => Event,
-        "email_domain_changed"    => Event,
-        "team_profile_change"     => Event,
-        "team_profile_delete"     => Event,
-        "team_profile_reorder"    => Event,
-        "bot_added"               => Event,
-        "bot_changed"             => Event,
-        "accounts_changed"        => Event,
-        "team_migration_started"  => Event,
-        "reconnect_url"           => Event::ReconnectUrl,
-        "Experimental"            => Event,
-        "subteam_created"         => Event,
-        "subteam_updated"         => Event,
-        "subteam_self_added"      => Event,
-        "subteam_self_removed"    => Event,
-      }
       EVENT_MAP
     end
 
@@ -185,10 +100,13 @@ class Slack
     def self.get_event(event : JSON::Any)
       event["type"]?.try do |type|
         event_map[type.as_s]?.try do |e|
-          puts "Event is #{event}"
           e.new(event)
         end
       end
+    end
+
+    def get_event(event : JSON::Any)
+      new(event)
     end
 
     def self.get_event(event : JSON::Any, &block)

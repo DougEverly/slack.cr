@@ -12,27 +12,20 @@ Add this to your application's `shard.yml`:
 ```yaml
 dependencies:
   slack:
-    github: DougEverly/slack
+    github: DougEverly/slack.cr
 ```
 
 
 ## Usage
 
-
 ```crystal
 require "slack"
 ```
+## Samples
 
+Look in `samples` directory for example usage.
 
-## Todo
-
-* Self registering events
-* Stabilize API
-* Properly reconnect
-* Streamline callbacks
-* Reconcile with https://github.com/manastech/crystal_slack Event API
-
-## Development
+## Example
 
 ```crystal
 require "../src/slack.cr"

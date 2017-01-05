@@ -28,7 +28,7 @@ class Slack
   # Websocket connection.
   property socket : HTTP::WebSocket?
 
-  property debug = true
+  property debug = false
 
   # @config : JSON::Any
 
@@ -59,16 +59,13 @@ class Slack
     response.body
     config = Slack::Hello.from_json(response.body)
     config.users.each do |user|
-      pp user
       @users << user
     end
     config.channels.each do |channel|
       @channels[channel.id] = channel
       @channels["#" + channel.name] = channel
     end
-    pp @users
     if config
-      # pp config
       @wss = config.url
       @me = config.me
     end
@@ -106,8 +103,10 @@ class Slack
 
     # Connect loop
     while @running
-      puts "Connecting..."
       connect
+      if @running
+        "Reconnecting..."
+      end
     end
     puts "Disconnected"
   end
@@ -119,29 +118,27 @@ class Slack
   # connect and run event loop
   private def connect
     begin
-      puts "Connecting..." if @debug
       if wss = @wss
         @socket = HTTP::WebSocket.new(wss)
+        puts "Connected to #{wss}"
+        puts
         @socket.try do |socket|
           socket.on_close do |m|
             puts "Connection closed: #{m}"
           end
 
           socket.on_message do |j|
-            puts "Got event: #{j}" if debug
             x = JSON.parse(j)
-            pp x
             begin
               event = Slack::Event.get_event(x)
               if event
-                pp event
                 if cbs = @callbacks[event.class]?
                   cbs.each do |cb|
                     cb.call(self, event)
                   end
                 end
               elsif reply = Slack::ReplyTo.get_reply(j)
-                pp reply
+                # TODO
               end
             rescue ex
               puts "Cannot process event: #{ex.message} for event type '#{x["type"]}'"

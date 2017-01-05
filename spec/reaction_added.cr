@@ -9,7 +9,6 @@ end
 
 describe Slack::Event::ReactionAdded do
   it "is a message" do
-    # pp event
     event.class.should eq(Slack::Event::ReactionAdded)
   end
 
