@@ -72,26 +72,6 @@ class Slack
       end
       return nil
     end
-
-    # def self.get_event(event : JSON::Any)
-    #   event["type"]?.try do |type|
-    #     event_map[type.as_s]?.try do |e|
-    #       e.new(event)
-    #     end
-    #   end
-    # end
-
-  #   def get_event(event : JSON::Any)
-  #     new(event)
-  #   end
-
-  #   def self.get_event(event : JSON::Any, &block)
-  #     event["type"]?.try do |type|
-  #       event_map[type.as_s]?.try do |e|
-  #         yield e.new(event)
-  #       end
-  #     end
-  #   end
   end
 
   class Subtype
