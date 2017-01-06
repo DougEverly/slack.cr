@@ -41,37 +41,37 @@ slack.on(Slack::Event::UserTyping) do |session, event|
   puts "Someone is typing"
 end
 
-slack.on(Slack::Event::UserChange) do |session, event|
-  pp event
-  e = event.as(Slack::Event::UserChange)
-  puts "Here is my event"
-  pp e.get_profile
-  if user = session.users.by_id[e.user]?
-    puts "Here is my user"
-    pp user
-    user.profile = e.get_profile
-    pp user
-  end
-end
+# slack.on(Slack::Event::UserChange) do |session, event|
+#   pp event
+#   e = event.as(Slack::Event::UserChange)
+#   puts "Here is my event"
+#   pp e.get_profile
+#   if user = session.users.by_id[e.user]?
+#     puts "Here is my user"
+#     pp user
+#     user.profile = e.get_profile
+#     pp user
+#   end
+# end
 
-slack.on(Slack::Event::StarAdded) do |session, event|
-  puts "starred"
-end
+# slack.on(Slack::Event::StarAdded) do |session, event|
+#   puts "starred"
+# end
 
-slack.on(Slack::Event::PinAdded) do |session, event|
-  puts "pin added"
-end
+# slack.on(Slack::Event::PinAdded) do |session, event|
+#   puts "pin added"
+# end
 
-# send welcome Message
-slack.on(Slack::Event::Hello) do |session, event|
-  message = "Hello #{Time.now.to_s}"
-  r = Slack::Message.new(channel: session.channels["#general"].id, text: message)
-  slack.send r
-end
+# # send welcome Message
+# slack.on(Slack::Event::Hello) do |session, event|
+#   message = "Hello #{Time.now.to_s}"
+#   r = Slack::Message.new(channel: session.channels["#general"].id, text: message)
+#   slack.send r
+# end
 
-slack.on(Slack::Event::ReconnectUrl) do |session, event|
-  puts "uh oh should reconnect!"
-end
+# slack.on(Slack::Event::ReconnectUrl) do |session, event|
+#   puts "uh oh should reconnect!"
+# end
 
 spawn {
   slack.run

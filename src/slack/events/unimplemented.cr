@@ -66,6 +66,9 @@ class Slack
   class Event
     # Placeholder for unimplemented Slack events https://api.slack.com/events
     class Unimplemented < Slack::Event
+          JSON.mapping(
+        type: String,
+      )
     end
   end
 end

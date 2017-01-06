@@ -1,9 +1,8 @@
 require "./spec_helper"
 
 private def event
-  raw = %q[{"type":"message","channel":"C1B6MMY7L","user":"U1B602ZD2","text":"hi","ts":"1473680477.000002","team":"T1B6ABQMD"}]
-  msg = JSON.parse(raw)
-  event = Slack::Event.get_event(msg)
+  json = %q[{"type":"message","channel":"C1B6MMY7L","user":"U1B602ZD2","text":"hi","ts":"1473680477.000002","team":"T1B6ABQMD"}]
+  event = Slack::Event.get_event(json)
   event.as(Slack::Event::Message)
 end
 

@@ -5,23 +5,14 @@ class Slack
     # Implements https://api.slack.com/events/message
     class Message < Slack::Event
       @@type = "message"
-      property type : String
-      property user : String
-      property text : String
-      property ts : String
-      property channel : String
-      property subtype : String?
-
-      def initialize(@raw : JSON::Any)
-        super
-        @user = @raw["user"].as_s
-        @channel = @raw["channel"].as_s
-        @text = @raw["text"].as_s
-        @ts = @raw["ts"].as_s
-        @raw["subtype"]?.try do |s|
-          @subtype = s.as_s
-        end
-      end
+      JSON.mapping(
+        type: String,
+        user: String,
+        text: String,
+        ts: String,
+        channel: String,
+        subtype: String?,
+      )
 
       def mentioned_users
         text.match(/<@(\S+)>/) do |m|
