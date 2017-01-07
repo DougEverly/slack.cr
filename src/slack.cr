@@ -128,9 +128,8 @@ class Slack
           end
 
           socket.on_message do |j|
-            x = JSON.parse(j)
             begin
-              event = Slack::Event.get_event(x)
+              event = Slack::Event.get_event(j)
               if event
                 if cbs = @callbacks[event.class]?
                   cbs.each do |cb|
@@ -141,7 +140,7 @@ class Slack
                 # TODO
               end
             rescue ex
-              puts "Cannot process event: #{ex.message} for event type '#{x["type"]}'"
+              puts "Cannot process event: #{ex.message}"
             end
           end
 
