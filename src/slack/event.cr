@@ -65,7 +65,7 @@ class Slack
       # inspect event_json to determine type
       parser = JSON::PullParser.new(event_json)
       parser.on_key("type") do
-        t =  parser.read_string
+        t = parser.read_string
         event_map[t]?.try do |e|
           return e.from_json(event_json)
         end

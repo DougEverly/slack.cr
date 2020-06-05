@@ -17,6 +17,5 @@ class Slack
     def get_event(event : JSON::Any)
       new(event)
     end
-
   end
 end
